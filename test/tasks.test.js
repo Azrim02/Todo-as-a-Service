@@ -138,7 +138,6 @@ describe('Tasks API', function() {
             });
         });
     });
-    
     it('should update task with correct updatedAt timestamp', function(done) {
       // First, create a task to update
       const tempTask = { title: 'Timestamp Test' };
@@ -163,6 +162,57 @@ describe('Tasks API', function() {
               });
           }, 1000); // Wait 1 second to ensure timestamp difference
         });
+    });
+    it('should update a task\'s completedAt timestamp when marked as completed', function(done) {
+      // First, create a task to update
+      const tempTask = { title: 'Complete Timestamp Test' };
+      request(app)
+        .post('/tasks')
+        .send(tempTask)
+        .end(function(err, res) {
+          if (err) return done(err);
+          const id = res.body.taskId;
+          const updatedData = { isCompleted: true };
+          // mark it as completed and check completedAt timestamp
+          request(app)
+            .put(`/tasks/${id}`)
+            .send(updatedData)
+            .expect(200)
+            .end(function(err, res) {
+              if (err) return done(err);
+              if (!res.body || !res.body.completedAt) return done(new Error('completedAt timestamp not set when task marked as completed'));
+              done();
+            });
+        });
+    });
+    it('should clear completedAt timestamp when marked as not completed', function(done) {
+      // First, create a task and mark it as completed
+      const tempTask = { title: 'Uncomplete Timestamp Test' };
+      request(app)
+        .post('/tasks')
+        .send(tempTask)
+        .end(function(err, res) {
+          if (err) return done(err);
+          const id = res.body.taskId;
+          // mark it as completed
+          request(app)
+            .put(`/tasks/${id}`)
+            .send({ isCompleted: true })
+            .end(function(err, res) {
+              if (err) return done(err);
+              if (!res.body || !res.body.completedAt) return done(new Error('completedAt timestamp not set when task marked as completed'));
+              // Now mark it as not completed
+              request(app)
+                .put(`/tasks/${id}`)
+                .send({ isCompleted: false })
+                .expect(200)
+                .end(function(err, res) {
+                  if (err) return done(err);
+                  if (!res.body || res.body.completedAt !== null) return done(new Error('completedAt timestamp not cleared when task marked as not completed'));
+                  done();
+                });
+            });
+        });           
     });
   });
 
