@@ -29,6 +29,16 @@ router.get('/', function(req, res, next) {
   res.json(tasks);
 });
 
+// GET single task by id
+router.get('/:id', function(req, res, next) {
+  const taskId = parseInt(req.params.id);
+  const task = tasks.find(task => task.taskId === taskId);
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+  res.json(task);
+});
+
 // POST create new task
 router.post('/', function(req, res, next) {
   const { title } = req.body;

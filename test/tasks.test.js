@@ -85,7 +85,7 @@ describe('Tasks API', function() {
   });
 
   describe('PUT /tasks/:id', function() {
-    it('should update a task by id', function(done) {
+    it('should update a task title by id', function(done) {
       // First, create a task to update
       const tempTask = { title: 'Update Me' };
       request(app)
@@ -117,6 +117,27 @@ describe('Tasks API', function() {
           done();
         });
     });
+    it('should update a task\'s isCompleted by id', function(done) {
+      // First, create a task to update
+      const tempTask = { title: 'Complete Me' };
+      request(app)
+        .post('/tasks')
+        .send(tempTask)
+        .end(function(err, res) {
+          if (err) return done(err);
+          const id = res.body.taskId;
+          const updatedData = { isCompleted: true };
+          request(app)
+            .put(`/tasks/${id}`)
+            .send(updatedData)
+            .expect(200)
+            .end(function(err, res) {
+              if (err) return done(err);
+              if (!res.body || res.body.isCompleted !== updatedData.isCompleted) return done(new Error('Task not updated correctly'));
+              done();
+            });
+        });
+    });
     it('should update task with correct updatedAt timestamp', function(done) {
       // First, create a task to update
       const tempTask = { title: 'Timestamp Test' };
@@ -140,6 +161,39 @@ describe('Tasks API', function() {
                 done();
               });
           }, 1000); // Wait 1 second to ensure timestamp difference
+        });
+    });
+  });
+
+  describe('GET /tasks/:id', function() {
+    it('should return a single task by id', function(done) {
+      // First, create a task to fetch
+      const tempTask = { title: 'Single Task', desc: 'Fetch me!' };
+      request(app)
+        .post('/tasks')
+        .send(tempTask)
+        .end(function(err, res) {
+          if (err) return done(err);
+          const id = res.body.taskId;
+          request(app)
+            .get(`/tasks/${id}`)
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .end(function(err, res) {
+              if (err) return done(err);
+              if (!res.body || res.body.title !== tempTask.title) return done(new Error('Did not return the correct task'));
+              done();
+            });
+        });
+    });
+    it('should return 404 for non-existent task', function(done) {
+      request(app)
+        .get('/tasks/99999')
+        .expect(404)
+        .end(function(err, res) {
+          if (err) return done(err);
+          if (!res.body.error) return done(new Error('No error message for non-existent task'));
+          done();
         });
     });
   });
