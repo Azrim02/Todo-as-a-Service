@@ -7,6 +7,117 @@ app.use(express.json());
 app.use('/tasks', tasksRouter);
 
 describe('Tasks API', function() {
+    describe('Validation for startDate and dueDate', function() {
+      it('should return 400 if dueDate is before startDate on POST', function(done) {
+        const newTask = {
+          title: 'Invalid Dates',
+          startDate: '2026-02-20T10:00:00Z',
+          dueDate: '2026-02-19T10:00:00Z'
+        };
+        request(app)
+          .post('/tasks')
+          .send(newTask)
+          .expect(400)
+          .end(function(err, res) {
+            if (err) return done(err);
+            if (!res.body.error) return done(new Error('No error message for dueDate before startDate'));
+            done();
+          });
+      });
+      it('should return 400 if startDate is present but dueDate is missing on POST', function(done) {
+        const newTask = {
+          title: 'Missing Due Date',
+          startDate: '2026-02-20T10:00:00Z'
+        };
+        request(app)
+          .post('/tasks')
+          .send(newTask)
+          .expect(400)
+          .end(function(err, res) {
+            if (err) return done(err);
+            if (!res.body.error) return done(new Error('No error message for missing dueDate'));
+            done();
+          });
+      });
+      it('should allow dueDate without startDate on POST', function(done) {
+        const newTask = {
+          title: 'Due Date Only',
+          dueDate: '2026-02-21T10:00:00Z'
+        };
+        request(app)
+          .post('/tasks')
+          .send(newTask)
+          .expect(201)
+          .end(function(err, res) {
+            if (err) return done(err);
+            if (!res.body || res.body.dueDate !== newTask.dueDate) return done(new Error('dueDate not set correctly'));
+            done();
+          });
+      });
+      it('should return 400 if dueDate is before startDate on PUT', function(done) {
+        // First, create a valid task
+        const tempTask = { title: 'Update Dates', startDate: '2026-02-20T10:00:00Z', dueDate: '2026-02-22T10:00:00Z' };
+        request(app)
+          .post('/tasks')
+          .send(tempTask)
+          .end(function(err, res) {
+            if (err) return done(err);
+            const id = res.body.taskId;
+            // Try to update with invalid dates
+            request(app)
+              .put(`/tasks/${id}`)
+              .send({ startDate: '2026-02-23T10:00:00Z', dueDate: '2026-02-22T10:00:00Z' })
+              .expect(400)
+              .end(function(err, res) {
+                if (err) return done(err);
+                if (!res.body.error) return done(new Error('No error message for dueDate before startDate on PUT'));
+                done();
+              });
+          });
+      });
+      it('should return 400 if startDate is present but dueDate is missing on PUT', function(done) {
+        // First, create a valid task
+        const tempTask = { title: 'Update Missing Due', startDate: '2026-02-20T10:00:00Z', dueDate: '2026-02-22T10:00:00Z' };
+        request(app)
+          .post('/tasks')
+          .send(tempTask)
+          .end(function(err, res) {
+            if (err) return done(err);
+            const id = res.body.taskId;
+            // Try to update with missing dueDate
+            request(app)
+              .put(`/tasks/${id}`)
+              .send({ startDate: '2026-02-23T10:00:00Z' })
+              .expect(400)
+              .end(function(err, res) {
+                if (err) return done(err);
+                if (!res.body.error) return done(new Error('No error message for missing dueDate on PUT'));
+                done();
+              });
+          });
+      });
+      it('should allow dueDate without startDate on PUT', function(done) {
+        // First, create a valid task
+        const tempTask = { title: 'Update Due Only', dueDate: '2026-02-22T10:00:00Z' };
+        request(app)
+          .post('/tasks')
+          .send(tempTask)
+          .end(function(err, res) {
+            if (err) return done(err);
+            const id = res.body.taskId;
+            // Update with only dueDate
+            request(app)
+              .put(`/tasks/${id}`)
+              .send({ dueDate: '2026-02-23T10:00:00Z' })
+              .expect(200)
+              .end(function(err, res) {
+                if (err) return done(err);
+                if (!res.body || res.body.dueDate !== '2026-02-23T10:00:00Z') return done(new Error('dueDate not updated correctly'));
+                done();
+              });
+          });
+      });
+    });
   describe('GET /tasks', function() {
     it('should return all tasks', function(done) {
       request(app)
@@ -36,6 +147,24 @@ describe('Tasks API', function() {
         .end(function(err, res) {
           if (err) return done(err);
           if (!res.body || res.body.title !== newTask.title) return done(new Error('Task not created correctly'));
+          done();
+        });
+    });
+    it('should set createdAt to the current time when a new task is created', function(done) {
+      const newTask = { title: 'CreatedAt Test' };
+      const before = new Date();
+      request(app)
+        .post('/tasks')
+        .send(newTask)
+        .expect(201)
+        .end(function(err, res) {
+          if (err) return done(err);
+          if (!res.body || !res.body.createdAt) return done(new Error('createdAt not set'));
+          const createdAt = new Date(res.body.createdAt);
+          const after = new Date();
+          if (createdAt < before || createdAt > after) {
+            return done(new Error('createdAt is not within the expected time window'));
+          }
           done();
         });
     });
