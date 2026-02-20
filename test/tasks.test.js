@@ -117,5 +117,30 @@ describe('Tasks API', function() {
           done();
         });
     });
+    it('should update task with correct updatedAt timestamp', function(done) {
+      // First, create a task to update
+      const tempTask = { title: 'Timestamp Test' };
+      request(app)
+        .post('/tasks')
+        .send(tempTask)
+        .end(function(err, res) {
+          if (err) return done(err);
+          const id = res.body.taskId;
+          const originalUpdatedAt = new Date(res.body.updatedAt);
+          setTimeout(() => {
+            const updatedData = { title: 'Timestamp Updated' };
+            request(app)
+              .put(`/tasks/${id}`)
+              .send(updatedData)
+              .expect(200)
+              .end(function(err, res) {
+                if (err) return done(err);
+                const newUpdatedAt = new Date(res.body.updatedAt);
+                if (newUpdatedAt <= originalUpdatedAt) return done(new Error('updatedAt timestamp not updated correctly'));
+                done();
+              });
+          }, 1000); // Wait 1 second to ensure timestamp difference
+        });
+    });
   });
 });

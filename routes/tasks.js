@@ -88,4 +88,15 @@ router.delete('/:id', function(req, res, next) {
   res.json(deletedTask);
 });
 
+router.put('/:id', function(req, res, next) {
+  const taskId = parseInt(req.params.id);
+  const taskIndex = tasks.findIndex(task => task.taskId === taskId);
+  if (taskIndex === -1) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+  const updatedTask = { ...tasks[taskIndex], ...req.body, updatedAt: new Date() };
+  tasks[taskIndex] = updatedTask;
+  res.json(updatedTask);
+});
+
 module.exports = router;
