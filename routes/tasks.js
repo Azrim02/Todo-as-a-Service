@@ -4,8 +4,8 @@ var router = express.Router();
 let tasks = [
     {   
         taskId: 1, 
-        title: "Buy nasi tomato", 
-        desc: "Sedap gila nasi tomato ni, kena beli",
+        title: "Welcome to Todo-aaS!", 
+        desc: "Create new tasks, set priorities, and manage your to-do list with ease.",
         createdAt: new Date(),
         updatedAt: new Date(),
         completedAt: null,
@@ -17,31 +17,12 @@ let tasks = [
             medium: false,
             high: false
         },
-        category: "Groceries",
-        startDate: null,
-        dueDate: null
-    },
-    {
-        taskId: 2,
-        title: "Learn Express.js", 
-        desc: "Learn how to build web applications using Express.js",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        completedAt: null,
-        isCompleted: false,
-        isDeleted: false,
-        parentTaskId: null,
-        priority: {
-            low: false,
-            medium: false,
-            high: false
-        },
-        category: "Growth",
+        category: "Self-Improvement",
         startDate: null,
         dueDate: null
     }
 ];
-let nextId = 3;
+let nextId = 2;
 
 // GET tasks listing.
 router.get('/', function(req, res, next) {
