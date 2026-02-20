@@ -85,7 +85,7 @@ router.delete('/:id', function(req, res, next) {
     return res.status(404).json({ error: 'Task not found' });
   }
   const deletedTask = tasks.splice(taskIndex, 1)[0];
-  res.send("Task deleted successfully");
+  res.json(deletedTask);
 });
 
 module.exports = router;
