@@ -45,6 +45,16 @@ router.post('/', function(req, res, next) {
   if (!title) {
     return res.status(400).json({ error: 'Title is required' });
   }
+  if (req.body.startDate && req.body.dueDate && new Date(req.body.startDate) > new Date(req.body.dueDate)) {
+    return res.status(400).json({ error: 'Start date cannot be after due date' });
+  }
+  if (req.body.startDate && !req.body.dueDate) {
+    return res.status(400).json({ error: 'Due date is required when start date is provided' });
+  }
+  // if (!req.body.startDate && req.body.dueDate) {
+  //   return res.status(400).json({ error: 'Start date is required when due date is provided' });
+  // }
+
   const newTask = { 
     taskId: nextId++, 
     title, 
@@ -85,7 +95,18 @@ router.put('/:id', function(req, res, next) {
   if (taskIndex === -1) {
     return res.status(404).json({ error: 'Task not found' });
   }
+  if (req.body.startDate && req.body.dueDate && new Date(req.body.startDate) > new Date(req.body.dueDate)) {
+    return res.status(400).json({ error: 'Start date cannot be after due date' });
+  }
+  if (req.body.startDate && !req.body.dueDate) {
+    return res.status(400).json({ error: 'Due date is required when start date is provided' });
+  }
   const updatedTask = { ...tasks[taskIndex], ...req.body, updatedAt: new Date() };
+  if (updatedTask.isCompleted && !updatedTask.completedAt) {
+    updatedTask.completedAt = new Date();
+  } else if (!(updatedTask.isCompleted) && updatedTask.completedAt) {
+    updatedTask.completedAt = null;
+  }
   tasks[taskIndex] = updatedTask;
   res.json(updatedTask);
 });

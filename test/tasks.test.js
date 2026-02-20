@@ -50,7 +50,10 @@ describe('Tasks API', function() {
           .expect(201)
           .end(function(err, res) {
             if (err) return done(err);
-            if (!res.body || res.body.dueDate !== newTask.dueDate) return done(new Error('dueDate not set correctly'));
+            if (!res.body ) return done(new Error('No task returned'));
+            if (res.body.dueDate !== new Date(newTask.dueDate).toISOString()) {
+              return done(new Error(`dueDate not set correctly. Expected dueDate ${newTask.dueDate} but got ${res.body.dueDate}`));
+            }
             done();
           });
       });
