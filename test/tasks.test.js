@@ -138,6 +138,7 @@ describe('Tasks API', function() {
             });
         });
     });
+    
     it('should update task with correct updatedAt timestamp', function(done) {
       // First, create a task to update
       const tempTask = { title: 'Timestamp Test' };
